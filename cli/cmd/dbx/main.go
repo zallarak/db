@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/db-xyz/cli/internal/cmd"
+	"github.com/zallarak/db/cli/internal/cmd"
 )
 
 func main() {

@@ -2,6 +2,8 @@
 
 A complete Postgres-as-a-Service platform built on Proxmox LXC containers.
 
+**Repository:** https://github.com/zallarak/db
+
 ## Architecture
 
 - **API Service** (`/api`) - Go backend with HTTP/JSON API

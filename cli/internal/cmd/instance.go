@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"

@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/db-xyz/api/internal/auth"
+	"github.com/zallarak/db/api/internal/auth"
 	"github.com/gin-gonic/gin"
 )
 

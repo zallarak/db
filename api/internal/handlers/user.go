@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/db-xyz/api/internal/models"
+	"github.com/zallarak/db/api/internal/models"
 	"github.com/gin-gonic/gin"
 )
 

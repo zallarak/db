@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/db-xyz/api/internal/models"
+	"github.com/zallarak/db/api/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

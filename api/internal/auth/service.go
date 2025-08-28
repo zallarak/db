@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/db-xyz/api/internal/models"
+	"github.com/zallarak/db/api/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/argon2"

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -29,10 +30,18 @@ var orgSelectCmd = &cobra.Command{
 	RunE:  runOrgSelect,
 }
 
+var orgCreateCmd = &cobra.Command{
+	Use:   "create [name]",
+	Short: "Create a new organization",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runOrgCreate,
+}
+
 func init() {
 	rootCmd.AddCommand(orgCmd)
 	orgCmd.AddCommand(orgListCmd)
 	orgCmd.AddCommand(orgSelectCmd)
+	orgCmd.AddCommand(orgCreateCmd)
 }
 
 func runOrgList(cmd *cobra.Command, args []string) error {
@@ -106,5 +115,59 @@ func runOrgSelect(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Selected organization: %s\n", orgID)
+	return nil
+}
+
+func runOrgCreate(cmd *cobra.Command, args []string) error {
+	token := viper.GetString("token")
+	if token == "" {
+		return fmt.Errorf("not logged in. Run 'dbx login' first")
+	}
+
+	orgName := args[0]
+
+	createReq := map[string]string{
+		"name": orgName,
+	}
+
+	reqBody, err := json.Marshal(createReq)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	apiURL := viper.GetString("api-url")
+	url := fmt.Sprintf("%s/v1/orgs", apiURL)
+	
+	req, err := http.NewRequest("POST", url, bytes.NewReader(reqBody))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("request failed with status %d", resp.StatusCode)
+	}
+
+	var response struct {
+		Org struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"org"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	fmt.Printf("Created organization: %s (ID: %s)\n", response.Org.Name, response.Org.ID)
 	return nil
 }

@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/db-xyz/api/internal/auth"
-	"github.com/db-xyz/api/internal/db"
-	"github.com/db-xyz/api/internal/handlers"
-	"github.com/db-xyz/api/internal/middleware"
+	"github.com/zallarak/db/api/internal/auth"
+	"github.com/zallarak/db/api/internal/db"
+	"github.com/zallarak/db/api/internal/handlers"
+	"github.com/zallarak/db/api/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -37,6 +37,12 @@ func main() {
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
+	})
+
+	// Serve OpenAPI documentation
+	r.Static("/docs", "./openapi.yaml")
+	r.GET("/openapi.yaml", func(c *gin.Context) {
+		c.File("./openapi.yaml")
 	})
 
 	// API v1 routes

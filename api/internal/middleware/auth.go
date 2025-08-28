@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/db-xyz/api/internal/auth"
+	"github.com/zallarak/db/api/internal/auth"
 	"github.com/gin-gonic/gin"
 )
 

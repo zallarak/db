@@ -29,7 +29,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dbx.yaml)")
-	rootCmd.PersistentFlags().String("api-url", "https://api.db.xyz", "API base URL")
+	rootCmd.PersistentFlags().String("api-url", "http://127.0.0.1:8081", "API base URL")
 	rootCmd.PersistentFlags().String("token", "", "API token for authentication")
 	rootCmd.PersistentFlags().StringP("output", "o", "table", "output format: table, json")
 
