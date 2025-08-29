@@ -6,33 +6,33 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zallarak/db/cli/internal/colors"
 )
 
 var orgCmd = &cobra.Command{
 	Use:   "org",
-	Short: "Organization management commands",
+	Short: colors.Gray("Organization management commands"),
 }
 
 var orgListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List organizations",
+	Short: colors.Gray("List organizations"),
 	RunE:  runOrgList,
 }
 
 var orgSelectCmd = &cobra.Command{
 	Use:   "select [org-id]",
-	Short: "Select default organization",
+	Short: colors.Gray("Select default organization"),
 	Args:  cobra.ExactArgs(1),
 	RunE:  runOrgSelect,
 }
 
 var orgCreateCmd = &cobra.Command{
 	Use:   "create [name]",
-	Short: "Create a new organization",
+	Short: colors.Gray("Create a new organization"),
 	Args:  cobra.ExactArgs(1),
 	RunE:  runOrgCreate,
 }
@@ -42,12 +42,18 @@ func init() {
 	orgCmd.AddCommand(orgListCmd)
 	orgCmd.AddCommand(orgSelectCmd)
 	orgCmd.AddCommand(orgCreateCmd)
+	
+	// Silence usage on errors for clean error messages
+	orgCmd.SilenceUsage = true
+	orgListCmd.SilenceUsage = true
+	orgSelectCmd.SilenceUsage = true
+	orgCreateCmd.SilenceUsage = true
 }
 
 func runOrgList(cmd *cobra.Command, args []string) error {
 	token := viper.GetString("token")
 	if token == "" {
-		return fmt.Errorf("not logged in. Run 'dbx login' first")
+		return fmt.Errorf(colors.Red("✗") + " " + colors.White("Not logged in. Run ") + colors.Cyan("dbx auth login") + colors.White(" first"))
 	}
 
 	apiURL := viper.GetString("api-url")
@@ -67,7 +73,7 @@ func runOrgList(cmd *cobra.Command, args []string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed with status %d", resp.StatusCode)
+		return fmt.Errorf(colors.Red("✗") + " " + colors.White("Request failed with status %d"), resp.StatusCode)
 	}
 
 	var response struct {
@@ -90,13 +96,26 @@ func runOrgList(cmd *cobra.Command, args []string) error {
 		return enc.Encode(response.Orgs)
 	}
 
-	// Table output
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tROLE\tCREATED")
-	for _, org := range response.Orgs {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", org.ID[:8], org.Name, org.Role, org.CreatedAt[:10])
+	// Clean table output
+	if len(response.Orgs) == 0 {
+		fmt.Println(colors.Gray("No organizations found"))
+		return nil
 	}
-	return w.Flush()
+
+	fmt.Printf("%s   %s   %s   %s\n", 
+		colors.TableHeader("id"),
+		colors.TableHeader("name"), 
+		colors.TableHeader("role"),
+		colors.TableHeader("created"))
+	
+	for _, org := range response.Orgs {
+		fmt.Printf("%s   %s   %s   %s\n",
+			colors.Cyan(org.ID[:8]),
+			colors.White(org.Name),
+			colors.Gray(org.Role),
+			colors.Gray(org.CreatedAt[:10]))
+	}
+	return nil
 }
 
 func runOrgSelect(cmd *cobra.Command, args []string) error {
@@ -114,14 +133,14 @@ func runOrgSelect(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
-	fmt.Printf("Selected organization: %s\n", orgID)
+	fmt.Printf(colors.SuccessIcon() + " " + colors.White("Selected organization: ") + colors.Cyan(orgID) + "\n")
 	return nil
 }
 
 func runOrgCreate(cmd *cobra.Command, args []string) error {
 	token := viper.GetString("token")
 	if token == "" {
-		return fmt.Errorf("not logged in. Run 'dbx login' first")
+		return fmt.Errorf(colors.Red("✗") + " " + colors.White("Not logged in. Run ") + colors.Cyan("dbx auth login") + colors.White(" first"))
 	}
 
 	orgName := args[0]
@@ -168,6 +187,6 @@ func runOrgCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	fmt.Printf("Created organization: %s (ID: %s)\n", response.Org.Name, response.Org.ID)
+	fmt.Printf(colors.SuccessIcon() + " " + colors.White("Created organization: ") + colors.Cyan(response.Org.Name) + colors.Gray(" (") + colors.Cyan(response.Org.ID[:8]) + colors.Gray(")") + "\n")
 	return nil
 }

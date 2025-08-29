@@ -8,28 +8,33 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zallarak/db/cli/internal/colors"
 )
 
 var userCmd = &cobra.Command{
 	Use:   "user",
-	Short: "User account management commands",
+	Short: colors.Gray("User account management commands"),
 }
 
 var userMeCmd = &cobra.Command{
 	Use:   "me",
-	Short: "Get current user information",
+	Short: colors.Gray("Get current user information"),
 	RunE:  runUserMe,
 }
 
 func init() {
 	rootCmd.AddCommand(userCmd)
 	userCmd.AddCommand(userMeCmd)
+	
+	// Silence usage on errors for clean error messages
+	userCmd.SilenceUsage = true
+	userMeCmd.SilenceUsage = true
 }
 
 func runUserMe(cmd *cobra.Command, args []string) error {
 	token := viper.GetString("token")
 	if token == "" {
-		return fmt.Errorf("not logged in. Run 'dbx login' first")
+		return fmt.Errorf(colors.Red("✗") + " " + colors.White("Not logged in. Run ") + colors.Cyan("dbx auth login") + colors.White(" first"))
 	}
 
 	apiURL := viper.GetString("api-url")
@@ -73,10 +78,10 @@ func runUserMe(cmd *cobra.Command, args []string) error {
 		return enc.Encode(response.User)
 	}
 
-	// Table output
-	fmt.Printf("ID:       %s\n", response.User.ID)
-	fmt.Printf("Email:    %s\n", response.User.Email)
-	fmt.Printf("Created:  %s\n", response.User.CreatedAt[:10])
+	// Clean field output
+	fmt.Printf("%s %s\n", colors.FieldLabel("ID"), colors.Cyan(response.User.ID[:8]))
+	fmt.Printf("%s %s\n", colors.FieldLabel("Email"), colors.White(response.User.Email))
+	fmt.Printf("%s %s\n", colors.FieldLabel("Created"), colors.Gray(response.User.CreatedAt[:10]))
 
 	return nil
 }

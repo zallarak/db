@@ -1,4 +1,4 @@
-.PHONY: help build run-api run-web run-cli clean dev-setup
+.PHONY: help build run-api run-web run-cli clean dev-setup install-cli
 
 help:
 	@echo "Available commands:"
@@ -6,6 +6,7 @@ help:
 	@echo "  run-api     - Run the API server"
 	@echo "  run-web     - Run the web development server"
 	@echo "  run-cli     - Build and show CLI help"
+	@echo "  install-cli - Build and install dbx CLI to ~/bin"
 	@echo "  dev-setup   - Start development environment (postgres)"
 	@echo "  clean       - Clean build artifacts"
 
@@ -32,8 +33,23 @@ dev-setup:
 dev-down:
 	docker-compose down
 
+# Install CLI to user's local bin directory
+install-cli: build-cli
+	@echo "📦 Installing dbx CLI..."
+	@mkdir -p ~/bin
+	@cp bin/dbx ~/bin/dbx
+	@chmod +x ~/bin/dbx
+	@echo "✅ dbx installed to ~/bin/dbx"
+	@echo ""
+	@echo "To use dbx from anywhere, ensure ~/bin is in your PATH:"
+	@echo "  echo 'export PATH=\"\$$HOME/bin:\$$PATH\"' >> ~/.bashrc"
+	@echo "  echo 'export PATH=\"\$$HOME/bin:\$$PATH\"' >> ~/.zshrc"
+	@echo ""
+	@echo "Or reload your shell and try: dbx --help"
+
 clean:
 	rm -rf bin/
+	rm -f ~/bin/dbx
 	cd api && go clean
 	cd cli && go clean
 	cd web && rm -rf dist/ node_modules/.cache/

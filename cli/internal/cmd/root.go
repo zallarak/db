@@ -6,21 +6,26 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zallarak/db/cli/internal/colors"
 )
 
 var cfgFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "dbx",
-	Short: "db.xyz CLI - Postgres-as-a-Service management tool",
-	Long: `dbx is the command line interface for db.xyz, a Postgres-as-a-Service platform.
-	
-Manage your organizations, projects, and database instances from the command line.`,
+	Short: colors.Gray("db.xyz CLI - Postgres-as-a-Service management tool"),
+	Long: colors.Gray("dbx") + colors.White(" is the command line interface for ") + colors.Cyan("db.xyz") + colors.White(", a Postgres-as-a-Service platform.\n\n") +
+		colors.White("Manage your organizations, projects, and database instances from the command line."),
 }
 
 func Execute() {
+	// Disable usage on error for cleaner error messages
+	rootCmd.SilenceUsage = true
+	rootCmd.SilenceErrors = true
+	
 	err := rootCmd.Execute()
 	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
@@ -53,6 +58,6 @@ func initConfig() {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		// Silent config loading for minimal output
 	}
 }

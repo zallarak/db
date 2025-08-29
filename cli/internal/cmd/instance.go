@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zallarak/db/cli/internal/colors"
 )
 
 var instanceCmd = &cobra.Command{
@@ -42,6 +42,12 @@ func init() {
 	instanceCmd.AddCommand(instanceCreateCmd)
 	instanceCmd.AddCommand(instanceDeleteCmd)
 
+	// Silence usage on errors for clean error messages
+	instanceCmd.SilenceUsage = true
+	instanceListCmd.SilenceUsage = true
+	instanceCreateCmd.SilenceUsage = true
+	instanceDeleteCmd.SilenceUsage = true
+
 	// Instance create flags
 	instanceCreateCmd.Flags().String("project", "", "Project ID (required)")
 	instanceCreateCmd.Flags().String("name", "", "Instance name (required)")
@@ -59,7 +65,7 @@ func init() {
 func runInstanceList(cmd *cobra.Command, args []string) error {
 	token := viper.GetString("token")
 	if token == "" {
-		return fmt.Errorf("not logged in. Run 'dbx login' first")
+		return fmt.Errorf(colors.Red("✗") + " " + colors.White("Not logged in. Run ") + colors.Cyan("dbx auth login") + colors.White(" first"))
 	}
 
 	projectID, _ := cmd.Flags().GetString("project")
@@ -112,25 +118,42 @@ func runInstanceList(cmd *cobra.Command, args []string) error {
 		return enc.Encode(response.Instances)
 	}
 
-	// Table output
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tPLAN\tPG\tSTATUS\tFQDN\tCREATED")
+	// Clean table output
+	if len(response.Instances) == 0 {
+		fmt.Println(colors.Gray("No instances found"))
+		return nil
+	}
+
+	fmt.Printf("%s   %s   %s   %s   %s   %s   %s\n", 
+		colors.TableHeader("id"),
+		colors.TableHeader("name"), 
+		colors.TableHeader("plan"),
+		colors.TableHeader("pg"),
+		colors.TableHeader("status"),
+		colors.TableHeader("fqdn"),
+		colors.TableHeader("created"))
+	
 	for _, instance := range response.Instances {
 		fqdn := instance.FQDN
 		if fqdn == "" {
 			fqdn = "-"
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%s\t%s\t%s\n", 
-			instance.ID[:8], instance.Name, instance.Plan, instance.PgVersion, 
-			instance.Status, fqdn, instance.CreatedAt[:10])
+		fmt.Printf("%s   %s   %s   %s   %s   %s   %s\n",
+			colors.Cyan(instance.ID[:8]),
+			colors.White(instance.Name),
+			colors.Gray(instance.Plan),
+			colors.Gray(fmt.Sprintf("%d", instance.PgVersion)),
+			colors.Gray(instance.Status),
+			colors.Gray(fqdn),
+			colors.Gray(instance.CreatedAt[:10]))
 	}
-	return w.Flush()
+	return nil
 }
 
 func runInstanceCreate(cmd *cobra.Command, args []string) error {
 	token := viper.GetString("token")
 	if token == "" {
-		return fmt.Errorf("not logged in. Run 'dbx login' first")
+		return fmt.Errorf(colors.Red("✗") + " " + colors.White("Not logged in. Run ") + colors.Cyan("dbx auth login") + colors.White(" first"))
 	}
 
 	projectID, _ := cmd.Flags().GetString("project")
@@ -192,7 +215,7 @@ func runInstanceCreate(cmd *cobra.Command, args []string) error {
 func runInstanceDelete(cmd *cobra.Command, args []string) error {
 	token := viper.GetString("token")
 	if token == "" {
-		return fmt.Errorf("not logged in. Run 'dbx login' first")
+		return fmt.Errorf(colors.Red("✗") + " " + colors.White("Not logged in. Run ") + colors.Cyan("dbx auth login") + colors.White(" first"))
 	}
 
 	instanceID := args[0]
